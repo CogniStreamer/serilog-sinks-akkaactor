@@ -32,9 +32,38 @@ namespace Serilog
         /// <param name="actorSystem">The Akka actor system.</param>
         /// <param name="actorPath">The Akka actor path.</param>
         /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
+        /// <param name="convertLogEvent">User supplied conversion method to convert from <see cref="LogEvent"/> to TMessage.</param>
         /// <param name="batchPostingLimit">The maximum number of events to post in a single batch.</param>
         /// <param name="period">The time to wait between checking for event batches.</param>
-        /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
+        /// <returns>Logger configuration, allowing configuration to continue.</returns>
+        /// <exception cref="ArgumentNullException">A required parameter is null.</exception>
+        public static LoggerConfiguration AkkaActor<TMessage>(
+            this LoggerSinkConfiguration loggerConfiguration,
+            ActorSystem actorSystem,
+            string actorPath,
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
+            Func<LogEvent, TMessage> convertLogEvent = null,
+            int batchPostingLimit = AkkaActorSinkDefaults.DefaultBatchPostingLimit,
+            TimeSpan? period = null)
+        {
+            if (actorSystem == null) throw new ArgumentNullException(nameof(actorSystem));
+            if (string.IsNullOrEmpty(actorPath)) throw new ArgumentNullException(nameof(actorPath));
+
+            var defaultedPeriod = period ?? AkkaActorSinkDefaults.DefaultPeriod;
+            return loggerConfiguration.Sink(
+                new AkkaActorSink<TMessage>(actorSystem, actorPath, batchPostingLimit, defaultedPeriod, convertLogEvent),
+                restrictedToMinimumLevel);
+        }
+
+        /// <summary>
+        /// Adds a sink that writes log events as string messages to a Akka actor.
+        /// </summary>
+        /// <param name="loggerConfiguration">The logger configuration.</param>
+        /// <param name="actorSystem">The Akka actor system.</param>
+        /// <param name="actorPath">The Akka actor path.</param>
+        /// <param name="restrictedToMinimumLevel">The minimum log event level required in order to write an event to the sink.</param>
+        /// <param name="batchPostingLimit">The maximum number of events to post in a single batch.</param>
+        /// <param name="period">The time to wait between checking for event batches.</param>
         /// <returns>Logger configuration, allowing configuration to continue.</returns>
         /// <exception cref="ArgumentNullException">A required parameter is null.</exception>
         public static LoggerConfiguration AkkaActor(
@@ -42,17 +71,10 @@ namespace Serilog
             ActorSystem actorSystem,
             string actorPath,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-            int batchPostingLimit = AkkaActorSink.DefaultBatchPostingLimit,
-            TimeSpan? period = null,
-            IFormatProvider formatProvider = null)
+            int batchPostingLimit = AkkaActorSinkDefaults.DefaultBatchPostingLimit,
+            TimeSpan? period = null)
         {
-            if (actorSystem == null) throw new ArgumentNullException(nameof(actorSystem));
-            if (string.IsNullOrEmpty(actorPath)) throw new ArgumentNullException(nameof(actorPath));
-
-            var defaultedPeriod = period ?? AkkaActorSink.DefaultPeriod;
-            return loggerConfiguration.Sink(
-                new AkkaActorSink(actorSystem, actorPath, batchPostingLimit, defaultedPeriod, formatProvider),
-                restrictedToMinimumLevel);
+            return loggerConfiguration.AkkaActor<LogEvent>(actorSystem, actorPath, restrictedToMinimumLevel, null, batchPostingLimit, period);
         }
     }
 }

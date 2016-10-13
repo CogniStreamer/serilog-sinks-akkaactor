@@ -23,20 +23,10 @@ namespace Serilog.Sinks.AkkaActor
     /// <summary>
     /// Writes log events to an Akka actor.
     /// </summary>
-    public class AkkaActorSink : PeriodicBatchingSink
+    public class AkkaActorSink<TMessage> : PeriodicBatchingSink
     {
-        /// <summary>
-        /// A reasonable default for the number of events posted in each batch.
-        /// </summary>
-        public const int DefaultBatchPostingLimit = 5;
-
-        /// <summary>
-        /// A reasonable default time to wait between checking for event batches.
-        /// </summary>
-        public static readonly TimeSpan DefaultPeriod = TimeSpan.FromSeconds(2);
-
         private readonly ActorSelection _actor;
-        private readonly IFormatProvider _formatProvider;
+        private readonly Func<LogEvent, TMessage> _convertLogEvent;
 
         /// <summary>
         /// Construct a sink posting to the specified Akka actor.
@@ -45,14 +35,14 @@ namespace Serilog.Sinks.AkkaActor
         /// <param name="actorPath">The actor path.</param>
         /// <param name="batchPostingLimit">The maximum number of events to post in a single batch.</param>
         /// <param name="period">The time to wait between checking for event batches.</param>
-        /// <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
-        public AkkaActorSink(ActorSystem actorSystem, string actorPath, int batchPostingLimit, TimeSpan period, IFormatProvider formatProvider)
+        /// <param name="convertLogEvent">User supplied conversion method to convert from <see cref="LogEvent"/> to TMessage.</param>
+        public AkkaActorSink(ActorSystem actorSystem, string actorPath, int batchPostingLimit, TimeSpan period, Func<LogEvent, TMessage> convertLogEvent = null)
             : base(batchPostingLimit, period)
         {
             if (actorSystem == null) throw new ArgumentNullException(nameof(actorSystem));
             if (string.IsNullOrEmpty(actorPath)) throw new ArgumentNullException(nameof(actorPath));
             _actor = actorSystem.ActorSelection(actorPath);
-            _formatProvider = formatProvider;
+            _convertLogEvent = convertLogEvent;
         }
 
         /// <summary>
@@ -63,7 +53,7 @@ namespace Serilog.Sinks.AkkaActor
         {
             foreach (var logEvent in events)
             {
-                _actor.Tell(logEvent);
+                _actor.Tell(_convertLogEvent != null ? (object)_convertLogEvent(logEvent) : logEvent);
             }
         }
     }
