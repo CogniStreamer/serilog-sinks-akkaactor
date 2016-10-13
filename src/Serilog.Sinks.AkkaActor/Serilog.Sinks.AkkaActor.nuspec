@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://raw.githubusercontent.com/CogniStreamer/serilog-sinks-akkaactor/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/CogniStreamer/serilog-sinks-akkaactor</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/CogniStreamer/serilog-sinks-akkaactor/master/icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Serilog sink for sending log messages to an Akka Actor</description>
+    <copyright>Copyright 2016 CogniStreamer NV</copyright>
+    <frameworkAssemblies>
+    </frameworkAssemblies>
+    <dependencies>
+      <dependency id="Akka" version="1.1.2" />
+      <dependency id="Serilog" version="2.3.0" />
+      <dependency id="Serilog.Sinks.PeriodicBatching" version="2.0.1" />
+    </dependencies>
+  </metadata>
+</package>
