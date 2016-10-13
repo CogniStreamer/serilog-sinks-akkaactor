@@ -21,7 +21,7 @@ using Serilog.Sinks.PeriodicBatching;
 namespace Serilog.Sinks.AkkaActor
 {
     /// <summary>
-    /// Writes log events as messages to an Akka actor.
+    /// Writes log events to an Akka actor.
     /// </summary>
     public class AkkaActorSink : PeriodicBatchingSink
     {
@@ -63,7 +63,7 @@ namespace Serilog.Sinks.AkkaActor
         {
             foreach (var logEvent in events)
             {
-                _actor.Tell(logEvent.RenderMessage(_formatProvider));
+                _actor.Tell(logEvent);
             }
         }
     }
